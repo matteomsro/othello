@@ -318,6 +318,70 @@ return moves[index]
 }
 }
 
+/* Test stratégie joueur 
+Le principe serait de récupérer la liste des coups possibles pour le joueur, de créer un HashMap avec comme clé le coup à jouer, 
+et comme valeur une pondération qui recense la rentabilité de jouer ce coup. On crée ensuite plusieurs méthodes qui permettent 
+de faire varier ces pondérations selon la stratégie.
+*/
+
+class Player extends Agent{
+constructor(){
+super()
+this.board = new Board()
+}
+
+init(board,color){
+    let map = new Map();
+
+    let keys = valid_moves(board,color)
+    let values = Array(keys.length).fill(0);
+
+    for (let i = 0; i < keys.length; i++) {
+        map.set(keys[i], values[i]);
+    }
+    return map
+}
+
+prioCoin(map, board) {
+  var size = board.length;
+  
+  // Parcourir toutes les clés (les positions) du HashMap
+  for (var key of map.keys()) {
+    var i = key[0];
+    var j = key[1];
+    
+    // Vérifier si la position est un coin
+    if ((i === 0 || i === size-1) && (j === 0 || j === size-1)) {
+      // Augmenter la valeur associée de la clé
+      var value = map.get(key);
+      map.set(key, value + 10);
+    }
+    // Vérifier si la position est adjacente à un coin
+    else if ((i === 0 || i === size-1 || j === 0 || j === size-1) &&
+             ((i === 0 || i === size-1) !== (j === 0 || j === size-1))) {
+      // Diminuer la valeur associée de la clé
+      var value = map.get(key);
+      map.set(key, value - 10);
+    }
+  }
+  
+  return map;
+}
+
+compute(board, time){
+    var map = init(board,this.color)
+    for(var i=0; i<50000000; i++){} // Making it very slow to test time restriction
+    //Il faudra ici mettre toutes les fonctions qui permettent d'ajuster le poids + voir si on les appele toutes tous le temps ou juste certaines selon la phase du jeu
+    map = prioCoin(map,board)
+    //Il faudra retourner la position avec le poid max mais j'attends de demander demain au prof pour savoir si on peut coder en java et pas JavaScript
+
+}
+
+
+
+}
+
+
 /*
 * Environment (Cannot be modified or any of its attributes accesed directly)
 */
