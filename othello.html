@@ -408,7 +408,6 @@ evaluation(board, color) {
   }
   const evaluations = [];
 
-  console.log(adversaire);
   
   for (let coup of coups_possibles) {
     const nouvel_etat = this.effectuer_coup(board, color, coup);
@@ -429,6 +428,8 @@ count_color(board,color){
 }
 
 compute(board,time){
+  for(var i=0; i<1000000000; i++){}
+
   return this.minimax(board,this.color,2,true);
 }
 
