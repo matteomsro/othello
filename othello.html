@@ -330,56 +330,107 @@ super()
 this.board = new Board()
 }
 
-init(board,color){
-    let map = new Map();
-
-    let keys = valid_moves(board,color)
-    let values = Array(keys.length).fill(0);
-
-    for (let i = 0; i < keys.length; i++) {
-        map.set(keys[i], values[i]);
-    }
-    return map
+compute(board,time){
+  return minimax(board,this.color,2,True);
 }
 
-prioCoin(map, board) {
-  var size = board.length;
-  
-  // Parcourir toutes les clés (les positions) du HashMap
-  for (var key of map.keys()) {
-    var i = key[0];
-    var j = key[1];
-    
-    // Vérifier si la position est un coin
-    if ((i === 0 || i === size-1) && (j === 0 || j === size-1)) {
-      // Augmenter la valeur associée de la clé
-      var value = map.get(key);
-      map.set(key, value + 10);
-    }
-    // Vérifier si la position est adjacente à un coin
-    else if ((i === 0 || i === size-1 || j === 0 || j === size-1) &&
-             ((i === 0 || i === size-1) !== (j === 0 || j === size-1))) {
-      // Diminuer la valeur associée de la clé
-      var value = map.get(key);
-      map.set(key, value - 10);
+//implémentation de l'algorithme min-max qui va retourner le meilleur coup à jouer. Nous retrouvons dans les variables
+// (board,color) pour connaître la situation du jeu 
+
+minimax(board, color, profondeur, joueur_max) {
+  // Si nous avons atteint la profondeur maximale ou que l'état est terminal,
+  // nous renvoyons l'évaluation de l'état.
+  if (profondeur === 0 || etat_terminale(board)) {
+    return evaluation(board,color);
+  }
+
+  // Obtention de la liste des coups possibles pour le joueur en cours.
+  let coups_possibles = valid_moves(board,color);
+
+  // Initialisation du score et du meilleur coup à jouer.
+  let meilleur_score = joueur_max ? -Infinity : Infinity;
+  let meilleur_coup = null;
+
+  // Pour chaque coup possible, nous effectuons la récursion minimax
+  // pour obtenir le score de l'état résultant.
+  for (let coup of coups_possibles) {
+    let  = effectuer_coup(board, color, coup);
+    let score = minimax(nouvel_etat.board, nouvel_etat.color, profondeur-1, !joueur_max);
+
+    // Si le joueur en cours est le joueur_max, nous cherchons le score maximal,
+    // sinon nous cherchons le score minimal.
+    if (joueur_max) {
+      if (score > meilleur_score) {
+        meilleur_score = score;
+        meilleur_coup = coup;
+      }
+    } else {
+      if (score < meilleur_score) {
+        meilleur_score = score;
+        meilleur_coup = coup;
+      }
     }
   }
+
+  // Nous retournons le meilleur coup possible.
+  return meilleur_coup;
+}
+
+//permet de simuler le coup suivant à partir de l'état étudié
+
+effectuer_coup(board, color, coup) {
+  let nouvel_board = clone(board); // Crée une copie de board
+  move(nouvel_board, coup[0], coup[1], color); // Joue le coup sur le nouvel_board
+  let nouvel_color = (color === 'B') ? 'W' : 'B'; // Change de joueur
+  return { board: nouvel_board, color: nouvel_color }; // Renvoie un nouvel état
+}
+
+//vérifie que plus personne ne peut jouer --> fin du game
+etat_terminale(board) {
+  const coups_possibles_blanc = valid_moves(board, 'W');
+  const coups_possibles_noir = valid_moves(board, 'B');
+  return coups_possibles_blanc.length === 0 && coups_possibles_noir.length === 0;
+}
+
+
+/*Prend en argument la situation de jeu étudié, calcule la liste des coups possibles pour le joueur et renvoie une liste
+*le taux de pertinence pour chacune de ces possibilités.
+*
+*Pour l'instant le score est calculé en faisant juste la différence entre le nombre de jetons d'une couleur sur l'autre
+*Mais le but va être ensuite d'affiner ce calcul de score via pleins de sous-fonctions
+*/
+evaluation(board, color) {
+  const coups_possibles = valid_moves(board, color);
+  if (color === 'B'){
+    const adversaire = 'W';
+  }
+  else{
+    const adversaire = 'B';
+  }
+  const evaluations = [];
   
-  return map;
+  for (let coup of coups_possibles) {
+    const nouvel_etat = effectuer_coup(board, color, coup);
+    const score = count_color(nouvel_etat.board, color) - count_color(nouvel_etat.board, adversaire);
+    evaluations.push(score);
+  }
+  
+  return evaluations;
 }
 
-compute(board, time){
-    var map = init(board,this.color)
-    for(var i=0; i<50000000; i++){} // Making it very slow to test time restriction
-    //Il faudra ici mettre toutes les fonctions qui permettent d'ajuster le poids + voir si on les appele toutes tous le temps ou juste certaines selon la phase du jeu
-    map = prioCoin(map,board)
-    //Il faudra retourner la position avec le poid max mais j'attends de demander demain au prof pour savoir si on peut coder en java et pas JavaScript
-
+cout_color(board,color){
+  var size = board.length;
+  var C = 0;
+  for( var i=0; i<size; i++)
+    for(var j=0; j<size; j++)
+      if(board[i][j]==color) C++
+  return C;
 }
 
 
 
 }
+
 
 
 /*
@@ -390,7 +441,7 @@ constructor(){
 super()
 this.board = new Board()
 this.players = { // Here we are going to set all the players name : instance of class
-'rand1': new RandomPlayer(),
+'moi': new RandomPlayer(),
 'rand2': new RandomPlayer()
 }
 }
