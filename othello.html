@@ -330,9 +330,6 @@ super()
 this.board = new Board()
 }
 
-compute(board,time){
-  return minimax(board,this.color,2,True);
-}
 
 //implémentation de l'algorithme min-max qui va retourner le meilleur coup à jouer. Nous retrouvons dans les variables
 // (board,color) pour connaître la situation du jeu 
@@ -340,12 +337,12 @@ compute(board,time){
 minimax(board, color, profondeur, joueur_max) {
   // Si nous avons atteint la profondeur maximale ou que l'état est terminal,
   // nous renvoyons l'évaluation de l'état.
-  if (profondeur === 0 || etat_terminale(board)) {
-    return evaluation(board,color);
+  if (profondeur === 0 || this.etat_terminale(board)) {
+    return this.evaluation(board,color);
   }
 
   // Obtention de la liste des coups possibles pour le joueur en cours.
-  let coups_possibles = valid_moves(board,color);
+  let coups_possibles = this.board.valid_moves(board,color);
 
   // Initialisation du score et du meilleur coup à jouer.
   let meilleur_score = joueur_max ? -Infinity : Infinity;
@@ -354,8 +351,8 @@ minimax(board, color, profondeur, joueur_max) {
   // Pour chaque coup possible, nous effectuons la récursion minimax
   // pour obtenir le score de l'état résultant.
   for (let coup of coups_possibles) {
-    let  = effectuer_coup(board, color, coup);
-    let score = minimax(nouvel_etat.board, nouvel_etat.color, profondeur-1, !joueur_max);
+    let nouvel_etat = this.effectuer_coup(board, color, coup);
+    let score = this.minimax(nouvel_etat.board, nouvel_etat.color, profondeur-1, !joueur_max);
 
     // Si le joueur en cours est le joueur_max, nous cherchons le score maximal,
     // sinon nous cherchons le score minimal.
@@ -379,16 +376,17 @@ minimax(board, color, profondeur, joueur_max) {
 //permet de simuler le coup suivant à partir de l'état étudié
 
 effectuer_coup(board, color, coup) {
-  let nouvel_board = clone(board); // Crée une copie de board
-  move(nouvel_board, coup[0], coup[1], color); // Joue le coup sur le nouvel_board
+  let nouvel_board = this.board.clone(board)
+ // Crée une copie de board
+  this.board.move(nouvel_board, coup[0], coup[1], color); // Joue le coup sur le nouvel_board
   let nouvel_color = (color === 'B') ? 'W' : 'B'; // Change de joueur
   return { board: nouvel_board, color: nouvel_color }; // Renvoie un nouvel état
 }
 
 //vérifie que plus personne ne peut jouer --> fin du game
 etat_terminale(board) {
-  const coups_possibles_blanc = valid_moves(board, 'W');
-  const coups_possibles_noir = valid_moves(board, 'B');
+  const coups_possibles_blanc = this.board.valid_moves(board, 'W');
+  const coups_possibles_noir = this.board.valid_moves(board, 'B');
   return coups_possibles_blanc.length === 0 && coups_possibles_noir.length === 0;
 }
 
@@ -400,31 +398,38 @@ etat_terminale(board) {
 *Mais le but va être ensuite d'affiner ce calcul de score via pleins de sous-fonctions
 */
 evaluation(board, color) {
-  const coups_possibles = valid_moves(board, color);
-  if (color === 'B'){
-    const adversaire = 'W';
+  const coups_possibles = this.board.valid_moves(board, color);
+  let adversaire;
+  if (color == 'B'){
+    adversaire = 'W';
   }
   else{
-    const adversaire = 'B';
+    adversaire = 'B';
   }
   const evaluations = [];
+
+  console.log(adversaire);
   
   for (let coup of coups_possibles) {
-    const nouvel_etat = effectuer_coup(board, color, coup);
-    const score = count_color(nouvel_etat.board, color) - count_color(nouvel_etat.board, adversaire);
+    const nouvel_etat = this.effectuer_coup(board, color, coup);
+    const score = this.count_color(nouvel_etat.board, color) - this.count_color(nouvel_etat.board, adversaire);
     evaluations.push(score);
   }
   
   return evaluations;
 }
 
-cout_color(board,color){
+count_color(board,color){
   var size = board.length;
   var C = 0;
   for( var i=0; i<size; i++)
     for(var j=0; j<size; j++)
       if(board[i][j]==color) C++
   return C;
+}
+
+compute(board,time){
+  return this.minimax(board,this.color,2,true);
 }
 
 
@@ -441,7 +446,7 @@ constructor(){
 super()
 this.board = new Board()
 this.players = { // Here we are going to set all the players name : instance of class
-'moi': new RandomPlayer(),
+'moi': new Player(),
 'rand2': new RandomPlayer()
 }
 }
