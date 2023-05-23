@@ -411,8 +411,8 @@ evaluation(board, color) {
   
   for (let coup of coups_possibles) {
     const nouvel_etat = this.effectuer_coup(board, color, coup);
-    var score = this.count_color(nouvel_etat.board, color) - this.count_color(nouvel_etat.board, adversaire);
-
+    //var score = this.count_color(nouvel_etat.board, color) - this.count_color(nouvel_etat.board, adversaire);
+    var score = 0
     // Vérifier si le coup correspond à une ouverture connue
     if (this.is_opening_move(nouvel_etat.board, coup, color)) {
       // Augmenter la pertinence du coup associé à une ouverture
@@ -424,13 +424,38 @@ evaluation(board, color) {
       score += 20.0; // Augmenter ou ajuster ce coefficient selon la pertinence souhaitée
     } else if (this.is_adjacent_to_corner(coup)) {
       // Diminuer le score si le coup est à côté d'un coin
-      score -= 10.0; // Augmenter ou ajuster ce coefficient selon la pertinence souhaitée
+      score -= 20.0; // Augmenter ou ajuster ce coefficient selon la pertinence souhaitée
+    }
+
+    if (this.isIsolated(nouvel_etat.board, coup, color)){
+      score -= 10
     }
 
     evaluations.push(score);
   }
   
   return evaluations;
+}
+
+
+//éviter les pions isolés
+isIsolated(board, move, color) {
+    const [x,y] = move;
+    const size = this.board.length;
+    // Check if there are neighboring pieces of the same color
+    const neighbors = [
+      [x - 1, y - 1], [x - 1, y], [x - 1, y + 1],
+      [x, y - 1],                 [x, y + 1],
+      [x + 1, y - 1], [x + 1, y], [x + 1, y + 1]
+    ];
+    for (const [nx, ny] of neighbors) {
+      if (nx >= 0 && nx < size && ny >= 0 && ny < size && board[nx][ny] === color) {
+        return false; // Found a neighboring piece of the same color
+      }
+    }
+    return true; // No neighboring piece of the same color found
+  
+  return false; // Position is not empty
 }
 
 is_corner_move(move) {
@@ -454,6 +479,10 @@ is_adjacent_to_corner(move) {
          (x === size - 2 && y === 0) ||    // Case adjacente au coin inférieur gauche
          (x === size - 1 && y === 1) ||    // Case adjacente au coin inférieur gauche
          (x === size - 2 && y === size - 1) || // Case adjacente au coin inférieur droit
+         (x === 1 && y === 1) ||
+         (x === 1 && y === size - 2) ||
+         (x === size - 2 && y === 1) ||
+         (x === size - 2 && y === size - 2) ||
          (x === size - 1 && y === size - 2);  // Case adjacente au coin inférieur droit
 }
 
