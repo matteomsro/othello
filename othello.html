@@ -411,12 +411,141 @@ evaluation(board, color) {
   
   for (let coup of coups_possibles) {
     const nouvel_etat = this.effectuer_coup(board, color, coup);
-    const score = this.count_color(nouvel_etat.board, color) - this.count_color(nouvel_etat.board, adversaire);
+    var score = this.count_color(nouvel_etat.board, color) - this.count_color(nouvel_etat.board, adversaire);
+
+    // Vérifier si le coup correspond à une ouverture connue
+    if (this.is_opening_move(nouvel_etat.board, coup, color)) {
+      // Augmenter la pertinence du coup associé à une ouverture
+      score += 20.0; // Augmenter ou ajuster ce coefficient selon la pertinence souhaitée
+    }
+
+    if (this.is_corner_move(coup)) {
+      // Augmenter le score si le coup est sur un coin
+      score += 20.0; // Augmenter ou ajuster ce coefficient selon la pertinence souhaitée
+    } else if (this.is_adjacent_to_corner(coup)) {
+      // Diminuer le score si le coup est à côté d'un coin
+      score -= 10.0; // Augmenter ou ajuster ce coefficient selon la pertinence souhaitée
+    }
+
     evaluations.push(score);
   }
   
   return evaluations;
 }
+
+is_corner_move(move) {
+  const [x, y] = move;
+  const size = this.board.length;
+
+  return (x === 0 && y === 0) ||     // Coin supérieur gauche
+         (x === 0 && y === size - 1) ||    // Coin supérieur droit
+         (x === size - 1 && y === 0) ||    // Coin inférieur gauche
+         (x === size - 1 && y === size - 1); // Coin inférieur droit
+}
+
+is_adjacent_to_corner(move) {
+  const [x, y] = move;
+  const size = this.board.length;
+
+  return (x === 0 && y === 1) ||           // Case adjacente au coin supérieur gauche
+         (x === 1 && y === 0) ||           // Case adjacente au coin supérieur gauche
+         (x === 0 && y === size - 2) ||    // Case adjacente au coin supérieur droit
+         (x === 1 && y === size - 1) ||    // Case adjacente au coin supérieur droit
+         (x === size - 2 && y === 0) ||    // Case adjacente au coin inférieur gauche
+         (x === size - 1 && y === 1) ||    // Case adjacente au coin inférieur gauche
+         (x === size - 2 && y === size - 1) || // Case adjacente au coin inférieur droit
+         (x === size - 1 && y === size - 2);  // Case adjacente au coin inférieur droit
+}
+
+
+is_opening_move(board, coup, color) {
+  const openingConfigurations = [
+    // La Tigre centrale
+    [
+      ['-', '-', '-', '-', '-', '-', '-', '-'],
+      ['-', '-', '-', '-', '-', '-', '-', '-'],
+      ['-', '-', 'B', 'W', '-', '-', '-', '-'],
+      ['-', '-', '-', 'B', '-', '-', '-', '-'],
+      ['-', '-', 'W', 'B', '-', '-', '-', '-'],
+      ['-', '-', '-', 'B', '-', '-', '-', '-'],
+      ['-', '-', 'B', '-', '-', '-', '-', '-'],
+      ['-', '-', '-', '-', '-', '-', '-', '-']
+    ],
+    // La Tigre diagonale
+    [
+      ['-', '-', '-', '-', '-', '-', '-', '-'],
+      ['-', '-', '-', '-', '-', '-', '-', '-'],
+      ['-', '-', 'B', 'W', '-', '-', '-', '-'],
+      ['-', '-', '-', 'B', '-', '-', '-', '-'],
+      ['-', '-', '-', '-', 'W', '-', '-', '-'],
+      ['-', '-', '-', '-', '-', 'B', '-', '-'],
+      ['-', '-', '-', '-', '-', '-', 'W', '-'],
+      ['-', '-', '-', '-', '-', '-', '-', '-']
+    ],
+      // La Heath
+      [
+      ['-', '-', '-', '-', '-', '-', '-', '-'],
+      ['-', '-', '-', '-', '-', '-', '-', '-'],
+      ['-', '-', '-', '-', '-', '-', '-', '-'],
+      ['-', '-', '-', 'W', '-', '-', '-', '-'],
+      ['-', '-', '-', '-', 'B', '-', '-', '-'],
+      ['-', '-', 'W', 'B', '-', '-', '-', '-'],
+      ['-', '-', '-', '-', '-', '-', '-', '-'],
+      ['-', '-', '-', '-', '-', '-', '-', '-']
+    ],
+    // La Diag. classique
+    [
+      ['-', '-', '-', '-', '-', '-', '-', '-'],
+      ['-', '-', '-', '-', '-', '-', '-', '-'],
+      ['-', '-', '-', '-', '-', '-', '-', '-'],
+      ['-', '-', '-', 'W', '-', '-', '-', '-'],
+      ['-', '-', '-', '-', 'B', '-', '-', '-'],
+      ['-', '-', '-', '-', '-', 'B', '-', '-'],
+      ['-', '-', '-', '-', '-', '-', 'W', '-'],
+      ['-', '-', '-', '-', '-', '-', '-', '-']
+    ],
+    // La Rose
+    [
+      ['-', '-', '-', '-', '-', '-', '-', '-'],
+      ['-', '-', '-', '-', '-', '-', '-', '-'],
+      ['-', '-', 'B', '-', '-', '-', '-', '-'],
+      ['-', '-', '-', 'W', '-', '-', '-', '-'],
+      ['-', '-', '-', '-', 'B', '-', '-', '-'],
+      ['-', '-', '-', 'W', '-', '-', '-', '-'],
+      ['-', '-', 'B', '-', '-', 'W', '-', '-'],
+      ['-', '-', '-', '-', '-', '-', '-', '-']
+    ]
+  ];
+
+  const size = board.length;
+
+  const [x, y] = coup;
+
+  // Vérifier si le plateau correspond à l'une des ouvertures
+  for (const opening of openingConfigurations) {
+    let match = true;
+
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        if (board[i][j] !== opening[i][j]) {
+          match = false;
+          break;
+        }
+      }
+
+      if (!match) {
+        break;
+      }
+    }
+
+    if (match) {
+      return true; // Le plateau correspond à une ouverture
+    }
+  }
+
+  return false; // Le plateau ne correspond à aucune ouverture
+}
+
 
 count_color(board,color){
   var size = board.length;
