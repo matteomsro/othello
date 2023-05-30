@@ -401,6 +401,7 @@ minimax(board, color, profondeur, joueur_max) {
   // nous renvoyons l'évaluation de l'état.
   if (profondeur === 0 || this.etat_terminale(board)) {
     return this.evaluation(board,color);
+    
   }
 
   // Obtention de la liste des coups possibles pour le joueur en cours.
@@ -649,8 +650,13 @@ count_color(board,color){
 
 compute(board,time){
   for(var i=0; i<10000000; i++){}
-
-  return this.minimax(board,this.color,2,true);
+  console.log(this.minimax(board,this.color,2,true))
+  if (this.minimax(board,this.color,2,true)== null){
+    return this.minimax(board,this.color,2,true);
+  }
+  else{
+    return [];
+  }
 }
 
 
@@ -667,7 +673,7 @@ constructor(){
 super()
 this.board = new Board()
 this.players = { // Here we are going to set all the players name : instance of class
-'moi': new RandomPlayer(),
+'moi': new Player(),
 'Barnab': new Real_Agent()
 }
 }
