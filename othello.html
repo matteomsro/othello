@@ -484,15 +484,24 @@ evaluation(board, color) {
 
     if (this.is_corner_move(coup)) {
       // Augmenter le score si le coup est sur un coin
-      score += 20.0; // Augmenter ou ajuster ce coefficient selon la pertinence souhaitée
+      score += 100.0; // Augmenter ou ajuster ce coefficient selon la pertinence souhaitée
     } else if (this.is_adjacent_to_corner(coup)) {
       // Diminuer le score si le coup est à côté d'un coin
-      score -= 20.0; // Augmenter ou ajuster ce coefficient selon la pertinence souhaitée
+      score -= 100.0; // Augmenter ou ajuster ce coefficient selon la pertinence souhaitée
     }
 
     if (this.isIsolated(nouvel_etat.board, coup, color)){
-      score -= 10
+      score -= 20
     }
+
+    if (this.count_color(nouvel_etat.board,color)> this.count_color(nouvel_etat.board, adversaire)){
+      score += 40
+    }
+
+    if (this.count_color(nouvel_etat.board,color)< this.count_color(nouvel_etat.board, adversaire)){
+      score -= 40
+    }
+
 
     evaluations.push(score);
   }
@@ -651,11 +660,23 @@ count_color(board,color){
 compute(board,time){
   for(var i=0; i<10000000; i++){}
   console.log(this.minimax(board,this.color,2,true))
-  if (this.minimax(board,this.color,2,true)== null){
-    return this.minimax(board,this.color,2,true);
+  if (this.minimax(board,this.color,2,true)=== null){
+    var valid_moves = this.board.valid_moves(board, this.color);
+    for (let move of valid_moves){
+      const nouvel_etat = this.effectuer_coup(board, color, move);
+      if (this.is_corner_move(move)){
+        return move;
+      }
+      if (this.count_color(nouvel_etat.board,color)> this.count_color(nouvel_etat.board, adversaire)){
+        return move;
+    }
+    }
+    var index = Math.floor(valid_moves.length * Math.random())
+    var best_move = valid_moves[index];
+    return best_move;
   }
   else{
-    return [];
+    return this.minimax(board,this.color,2,true);
   }
 }
 
