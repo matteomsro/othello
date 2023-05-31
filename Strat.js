@@ -224,5 +224,3 @@ class Player extends Agent{
     
     }
     
-    
-    
