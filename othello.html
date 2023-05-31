@@ -476,10 +476,10 @@ evaluation(board, color) {
     const nouvel_etat = this.effectuer_coup(board, color, coup);
     //var score = this.count_color(nouvel_etat.board, color) - this.count_color(nouvel_etat.board, adversaire);
     var score = 0
-    // Vérifier si le coup correspond à une ouverture connue
-    if (this.is_opening_move(nouvel_etat.board, coup, color)) {
-      // Augmenter la pertinence du coup associé à une ouverture
-      score += 20.0; // Augmenter ou ajuster ce coefficient selon la pertinence souhaitée
+
+    if (this.is_on_edge(coup)) {
+      // Améliorer le score si le coup est sur le bord
+      score += 40.0; // Augmenter ou ajuster ce coefficient selon la pertinence souhaitée
     }
 
     if (this.is_corner_move(coup)) {
@@ -490,8 +490,14 @@ evaluation(board, color) {
       score -= 100.0; // Augmenter ou ajuster ce coefficient selon la pertinence souhaitée
     }
 
+    const adversaire_moves = this.board.valid_moves(nouvel_etat.board, adversaire);
+    if (adversaire_moves.length < 3) {
+      // Augmenter le score si le coup empêche à l'adversaire d'avoir beaucoup d'opportunités de jeu
+      score += 100.0; // Augmenter ou ajuster ce coefficient selon la pertinence souhaitée
+    }
+
     if (this.isIsolated(nouvel_etat.board, coup, color)){
-      score -= 20
+      score -= 1000
     }
 
     if (this.count_color(nouvel_etat.board,color)> this.count_color(nouvel_etat.board, adversaire)){
@@ -502,6 +508,8 @@ evaluation(board, color) {
       score -= 40
     }
 
+    score += this.evaluateMobility(nouvel_etat.board,color,adversaire)
+
 
     evaluations.push(score);
   }
@@ -509,6 +517,22 @@ evaluation(board, color) {
   return evaluations;
 }
 
+
+evaluateMobility(board, color, adversaire) {
+    const valid_moves = this.board.valid_moves(board, color);
+    const adversaire_moves = this.board.valid_moves(board, adversaire);
+
+    const mobility_score = valid_moves.length - adversaire_moves.length;
+
+    return mobility_score*100;
+}
+
+
+is_on_edge(move) {
+  const [x,y] = move;
+    const size = this.board.length;
+    return x === 0 || x === size - 1 || y === 0 || y === size - 1;
+}
 
 //éviter les pions isolés
 isIsolated(board, move, color) {
@@ -559,93 +583,6 @@ is_adjacent_to_corner(move) {
 }
 
 
-is_opening_move(board, coup, color) {
-  const openingConfigurations = [
-    // La Tigre centrale
-    [
-      ['-', '-', '-', '-', '-', '-', '-', '-'],
-      ['-', '-', '-', '-', '-', '-', '-', '-'],
-      ['-', '-', 'B', 'W', '-', '-', '-', '-'],
-      ['-', '-', '-', 'B', '-', '-', '-', '-'],
-      ['-', '-', 'W', 'B', '-', '-', '-', '-'],
-      ['-', '-', '-', 'B', '-', '-', '-', '-'],
-      ['-', '-', 'B', '-', '-', '-', '-', '-'],
-      ['-', '-', '-', '-', '-', '-', '-', '-']
-    ],
-    // La Tigre diagonale
-    [
-      ['-', '-', '-', '-', '-', '-', '-', '-'],
-      ['-', '-', '-', '-', '-', '-', '-', '-'],
-      ['-', '-', 'B', 'W', '-', '-', '-', '-'],
-      ['-', '-', '-', 'B', '-', '-', '-', '-'],
-      ['-', '-', '-', '-', 'W', '-', '-', '-'],
-      ['-', '-', '-', '-', '-', 'B', '-', '-'],
-      ['-', '-', '-', '-', '-', '-', 'W', '-'],
-      ['-', '-', '-', '-', '-', '-', '-', '-']
-    ],
-      // La Heath
-      [
-      ['-', '-', '-', '-', '-', '-', '-', '-'],
-      ['-', '-', '-', '-', '-', '-', '-', '-'],
-      ['-', '-', '-', '-', '-', '-', '-', '-'],
-      ['-', '-', '-', 'W', '-', '-', '-', '-'],
-      ['-', '-', '-', '-', 'B', '-', '-', '-'],
-      ['-', '-', 'W', 'B', '-', '-', '-', '-'],
-      ['-', '-', '-', '-', '-', '-', '-', '-'],
-      ['-', '-', '-', '-', '-', '-', '-', '-']
-    ],
-    // La Diag. classique
-    [
-      ['-', '-', '-', '-', '-', '-', '-', '-'],
-      ['-', '-', '-', '-', '-', '-', '-', '-'],
-      ['-', '-', '-', '-', '-', '-', '-', '-'],
-      ['-', '-', '-', 'W', '-', '-', '-', '-'],
-      ['-', '-', '-', '-', 'B', '-', '-', '-'],
-      ['-', '-', '-', '-', '-', 'B', '-', '-'],
-      ['-', '-', '-', '-', '-', '-', 'W', '-'],
-      ['-', '-', '-', '-', '-', '-', '-', '-']
-    ],
-    // La Rose
-    [
-      ['-', '-', '-', '-', '-', '-', '-', '-'],
-      ['-', '-', '-', '-', '-', '-', '-', '-'],
-      ['-', '-', 'B', '-', '-', '-', '-', '-'],
-      ['-', '-', '-', 'W', '-', '-', '-', '-'],
-      ['-', '-', '-', '-', 'B', '-', '-', '-'],
-      ['-', '-', '-', 'W', '-', '-', '-', '-'],
-      ['-', '-', 'B', '-', '-', 'W', '-', '-'],
-      ['-', '-', '-', '-', '-', '-', '-', '-']
-    ]
-  ];
-
-  const size = board.length;
-
-  const [x, y] = coup;
-
-  // Vérifier si le plateau correspond à l'une des ouvertures
-  for (const opening of openingConfigurations) {
-    let match = true;
-
-    for (let i = 0; i < size; i++) {
-      for (let j = 0; j < size; j++) {
-        if (board[i][j] !== opening[i][j]) {
-          match = false;
-          break;
-        }
-      }
-
-      if (!match) {
-        break;
-      }
-    }
-
-    if (match) {
-      return true; // Le plateau correspond à une ouverture
-    }
-  }
-
-  return false; // Le plateau ne correspond à aucune ouverture
-}
 
 
 count_color(board,color){
@@ -662,15 +599,6 @@ compute(board,time){
   console.log(this.minimax(board,this.color,2,true))
   if (this.minimax(board,this.color,2,true)=== null){
     var valid_moves = this.board.valid_moves(board, this.color);
-    for (let move of valid_moves){
-      const nouvel_etat = this.effectuer_coup(board, color, move);
-      if (this.is_corner_move(move)){
-        return move;
-      }
-      if (this.count_color(nouvel_etat.board,color)> this.count_color(nouvel_etat.board, adversaire)){
-        return move;
-    }
-    }
     var index = Math.floor(valid_moves.length * Math.random())
     var best_move = valid_moves[index];
     return best_move;
