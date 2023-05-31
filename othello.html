@@ -324,67 +324,7 @@ et comme valeur une pondération qui recense la rentabilité de jouer ce coup. O
 de faire varier ces pondérations selon la stratégie.
 */
 
-//version de Barnab
 
-class Real_Agent extends Agent {
-    constructor() {
-        super();
-        this.board = new Board();
-    }
-
-    compute(board, time) {
-
-        var valid_moves = this.board.valid_moves(board, this.color);
-        var best_move = valid_moves[0];
-        var max_pieces = 0;
-
-        for (var i = 0; i < valid_moves.length; i++) {
-            var move = valid_moves[i];
-            var cloned_board = this.board.clone(board);
-            this.board.move(cloned_board, move[0], move[1], this.color);
-            var flipped_pieces = this.countFlippedPieces(cloned_board, move[0], move[1]);
-            if (flipped_pieces.length > max_pieces) {
-                max_pieces = flipped_pieces.length;
-                best_move = move;
-            }
-        }
-
-        return best_move;
-    }
-
-    countFlippedPieces(board, row, col) {
-        var color = this.color;
-        var flipped = [];
-
-        // Check in all directions
-        var directions = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
-        for (var dir of directions) {
-            var flippedDir = this.countFlippedPiecesInDirection(board, row, col, dir[0], dir[1], color);
-            flipped = flipped.concat(flippedDir);
-        }
-
-        return flipped;
-    }
-
-    countFlippedPiecesInDirection(board, row, col, dirRow, dirCol, color) {
-        var size = board.length;
-        var r = row + dirRow;
-        var c = col + dirCol;
-        var flipped = [];
-
-        while (r >= 0 && r < size && c >= 0 && c < size && board[r][c] !== ' ' && board[r][c] !== color) {
-            flipped.push([r, c]);
-            r += dirRow;
-            c += dirCol;
-        }
-
-        if (r >= 0 && r < size && c >= 0 && c < size && board[r][c] === color) {
-            return flipped;
-        } else {
-            return [];
-        }
-    }
-}
 
 class Player extends Agent{
 constructor(){
@@ -623,7 +563,7 @@ super()
 this.board = new Board()
 this.players = { // Here we are going to set all the players name : instance of class
 'moi': new Player(),
-'Barnab': new Real_Agent()
+'Barnab': new RandomPlayer()
 }
 }
 
